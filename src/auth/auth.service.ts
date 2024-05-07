@@ -1,10 +1,17 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { User } from './user.model';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   private inMemoryUsers: User[] = [];
+
+  constructor(private jwtService: JwtService) {}
 
   async signUp(id: string, pw: string): Promise<void> {
     if (this.doesIdExist(id)) {
@@ -17,6 +24,17 @@ export class AuthService {
     const newUser = new User(id, hashedPassword);
 
     this.inMemoryUsers.push(newUser);
+  }
+
+  async signIn(id: string, pw: string): Promise<{ token: string }> {
+    const user = this.inMemoryUsers.find((user) => user.id === id);
+
+    if (user && (await bcrypt.compare(pw, user.pw))) {
+      const token = await this.jwtService.signAsync({ id });
+      return { token }
+    }
+
+    throw new UnauthorizedException('Check your ID and password again');
   }
 
   private doesIdExist(id: string): boolean {
