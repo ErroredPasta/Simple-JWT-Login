@@ -6,9 +6,11 @@ import {
 import { User } from './user.model';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { encrypt } from './encryption';
 
 @Injectable()
 export class AuthService {
+
   private inMemoryUsers: User[] = [];
 
   constructor(private jwtService: JwtService) {}
@@ -35,6 +37,13 @@ export class AuthService {
     }
 
     throw new UnauthorizedException('Check your ID and password again');
+  }
+
+  async secureSignIn(id: string, pw: string, publicKey: string): Promise<{ token: string; }> {
+    const plainToken = (await this.signIn(id, pw)).token;
+    const encryptToken = encrypt(plainToken, publicKey);
+
+    return { token: encryptToken }
   }
 
   private doesIdExist(id: string): boolean {

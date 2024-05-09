@@ -15,4 +15,10 @@ export class AuthController {
   signIn(@Body('id') id: string, @Body('pw') pw: string): Promise<{ token: string }> {
     return this.service.signIn(id, pw);
   }
+
+  @Post('/secureSignIn')
+  @HttpCode(HttpStatus.OK)
+  secureSignIn(@Body('id') id: string, @Body('pw') pw: string, @Body('publicKey') publicKey: string): Promise<{ token: string }> {
+    return this.service.secureSignIn(id, pw, publicKey);
+  }
 }
